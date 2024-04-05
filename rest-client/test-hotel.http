@@ -1,0 +1,13 @@
+@apiURL = {{${{$dotenv WEBBKOM_API}}:8432
+
+
+GET {{apiURL}}/rooms
+
+### POST skapa nytt rum
+POST {{apiURL}}/rooms
+Content-Type: application/json
+
+{ 
+    "number": 406, 
+        "type": "double" 
+}
