@@ -1,42 +1,56 @@
+import psycopg, os
+from psycopg.rows import dict_row
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS 
-import json
+
+
+load_dotenv()
+
 PORT=8432
 
+db_url = os.environ.get("DB_URL") 
+print(db_url)
+conn = psycopg.connect(db_url,autocommit=True, row_factory=dict_row)
 
 app = Flask(__name__)
 CORS(app) # Tillåt cross-origin requests
 
-@app.route("/", methods=['GET', 'POST'])
-def hello():
-    #return "<h1>Hello, Flask!</h1>"
-    return { 
-        'greeting': "Hello, Flask-JSON!",
-        'method': request.method 
-    }
+roomsTEMP = [
+    {'number': 101, 'type': "single"},
+     {'number': 102, 'type': "double"},
+     {'number': 103, 'type': "single"},
+     {'number': 104, 'type': "suite"},
+]
 
 @app.route("/test", methods=['GET', 'POST'])
-def test():
+def dbtest():
+     with conn.cursor() as cur:
+        cur.execute("SELECT * from people")
+        rows = cur.fetchall()
+        return rows
+     
+
+    
+
+@app.route("/rooms", methods=['GET', 'POST'])
+def room_endpoint():
     if request.method == 'POST':
         # skapa rad i databasen, returnera ny id..
-        new_id = 555
+        request_body = request.get_json()
+        print(request_body)
         return { 
-            'msg': f"Du har skapat en ny rad i databasen, id är {new_id}!",
-            'method': request.method 
-        }
-    else:
-         
-        return { 
-            'msg': "TESTING!",
-            'method': request.method 
-        }
+            'msg': f"Du har skapat ett nytt rum, id: {len(roomsTEMP)-1}!",
 
-@app.route("/test/<int:id>", methods=['GET', 'PUT', 'PATCH', 'DELETE'] )
-def testId(id):
+        }
+ 
+        
+
+@app.route("/rooms/<int:id>", methods=['GET', 'PUT', 'PATCH', 'DELETE'] )
+def one_room_enpoint(id):
         if request.method == 'GET':
-            return { 
-                'msg': f"här får du id: {id}",
-                'method': request.method 
+            return { roomsTEMP[id]
+               
             }
         if request.method == 'PUT' or request.method == 'PATCH':
             return { 
