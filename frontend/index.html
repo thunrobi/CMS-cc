@@ -1,42 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello Flask</title>
+    <title>Hotellbokning</title>
 </head>
 <body>
-    <h2>Greeting from API: <span id="resp"></span></h2>
+    <h3>Boka rum</h3>
+    <select id="room"></select>
 
-    <p>
-        My public IP: <span id="ip"></span>
+    <select id="guest"></select>
 
-    </p>
+    Bokning startdatum: <input id="datefrom" type="date">
 
-    <form method="post">
-        <input name="foo">
-        <input type="submit">
+    <input id="btnBook" type="button" value="Boka">
 
-    </form>
+    <hr>
+    <ul id="bookings"></ul>
 
     <script>
-        (async function () {
-            const resp = await fetch('https://vm2208.kaj.pouta.csc.fi:8431/ip');
-            const ipData = await resp.json();
-            console.log(ipData);
-            document.querySelector('#ip').innerHTML = ipData.ip;
+    const API_URL = "https://vm2208.kaj.pouta.csc.fi:8432"
 
-        })();
+    async function getRooms() {
+        const resp = await fetch(`${API_URL}/rooms`);
+        const rooms = await resp.json();
 
-
-        async function getAPI() {
-            const resp = await fetch('https://vm2208.kaj.pouta.csc.fi:8432/');
-            const respData = await resp.json();
-            document.querySelector('#resp').innerHTML = respData.greeting;
+        let roomsHtml = "<option>-- Välj rum</option>";
+        for (room of rooms) {
+            roomsHtml += `
+                <option value="${room.id}">
+                    ${room.room_number}
+                </option>
+            `;
         }
-        getAPI();
+        document.querySelector('#room').innerHTML = roomsHtml;
+    }
+    getRooms();
+       
+
+    async function getGuests() {
+        const resp = await fetch(`${API_URL}/guests`);
+        const guests = await resp.json();
+
+        let guestsHtml = "<option>-- Välj gäst</option>";
+        for (guest of guests) {
+            guestsHtml += `
+                <option value="${guest.id}">
+                    ${guest.firstname}
+                </option>
+            `;
+        }
+        document.querySelector('#guest').innerHTML = guestsHtml;
+    }
+    getGuests();
+
+    async function getBookings() {
+        const resp = await fetch(`${API_URL}/bookings`);
+        const bookings = await resp.json();
+
+        let bookingsHtml = "";
+        for (b of bookings) {
+            bookingsHtml += `
+                <li>${b.datefrom} Room: ${b.room_id} Guest: ${b.guest_id}</li>
+            `;
+        }
+        document.querySelector('#bookings').innerHTML = bookingsHtml;
+    }
+    getBookings();
+
+
+    async function createBooking() {
+        // Detta ska POST:as till /bookings
+        const booking = {
+            room: document.querySelector('#room').value,
+            guest: document.querySelector('#guest').value,
+            datefrom: document.querySelector('#datefrom').value
+        }
+        console.log(booking);
+        const resp = await fetch(`${API_URL}/bookings`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(booking)
+        })
+        const respData = await resp.json();
+
+        console.log(respData);
+    }
+
+
+    document.querySelector('#btnBook').addEventListener('click', createBooking);
 
     </script>
+
 </body>
 </html>
-  
